@@ -6,9 +6,21 @@ const { chain, forEach } = require('lodash')
 const ffmpegPath = require('ffmpeg-static')
 const { spawn } = require('child_process')
 const sanitize = require('sanitize-filename')
+const dotenv = require('dotenv')
+const path = require('path')
+
+dotenv.config()
 
 app.use(express.json())
-app.use(cors())
+
+if (process.env.mode === 'production') {
+    app.use(cors())
+} else {
+    app.use(cors({
+        origin: 'http://localhost:3000'
+    }))
+}
+
 
 
 const getResu = (formats) => {
@@ -24,20 +36,25 @@ const getResu = (formats) => {
 }
 
 app.get('/api/get-video-info/:videoId', async (req, res) => {
+
     const { videoId } = req.params
-    const { videoDetails, formats } = await ytdl.getInfo(videoId)
-    const { title, thumbnails } = videoDetails
-    const videoResu = getResu(formats)
 
+    try {
+        const { videoDetails, formats } = await ytdl.getInfo(videoId)
+        const { title, thumbnails } = videoDetails
+        const videoResu = getResu(formats)
 
-    return res.status(200).json({
-        videoInfo: {
-            title,
-            thumbnailUrl: thumbnails[thumbnails.length - 1].url,
-            videoResu,
-            lastResu: videoResu[0]
-        }
-    })
+        return res.status(200).json({
+            videoInfo: {
+                title,
+                thumbnailUrl: thumbnails[thumbnails.length - 1].url,
+                videoResu,
+                lastResu: videoResu[0]
+            }
+        })
+    } catch (error) {
+        console.log(error.message)
+    }
 })
 
 app.get('/video-download', async (req, res) => {
@@ -129,6 +146,15 @@ app.get('/video-download', async (req, res) => {
     }
 })
 
-const port = 5000
-app.get('/', (req, res) => res.send('Hello World!'))
+if (process.env.mode === 'production') {
+
+    app.use(express.static(path.join(__dirname, "./client/build")));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, "./", "client", "build", "index.html"))
+    })
+}
+
+
+const port = process.env.port
 app.listen(port, () => console.log(`Server is running on port ${port}!`))

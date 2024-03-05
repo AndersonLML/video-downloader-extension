@@ -1,7 +1,11 @@
 import React, { useState } from 'react'
 import BounceLoader from 'react-spinners/BounceLoader'
 import axios from 'axios'
+import { base_api } from './utils'
+
 const Download = () => {
+
+
     const [link, setLink] = useState('')
     const [videoInfo, setVideoInfo] = useState('')
     const [resu, setResu] = useState('')
@@ -13,18 +17,20 @@ const Download = () => {
         const videoId = link.split('https://youtu.be/')[1]
         try {
             setLoader(true)
-            const { data } = await axios.get(`http://localhost:5000/api/get-video-info/${videoId}`)
+            const { data } = await axios.get(`${base_api}/api/get-video-info/${videoId}`)
             setLoader(false)
-            setVideoInfo(data.videoInfo)
-            setResu(data.videoInfo.lastResu)
+            setVideoInfo(data?.videoInfo)
+            setResu(data?.videoInfo?.lastResu)
+
         } catch (error) {
+            console.log(error)
             console.log(error.response)
         }
     }
 
     const video_download = () => {
         const videoId = link.split('https://youtu.be/')[1]
-        const url = `http://localhost:5000/video-download?id=${videoId}&resu=${resu}`
+        const url = `${base_api}/video-download?id=${videoId}&resu=${resu}`
         window.location.href = url
     }
     return (
@@ -36,6 +42,9 @@ const Download = () => {
                         <input onChange={(e) => setLink(e.target.value)} className='text-white outline-none w-full bg-transparent' type="text" placeholder='Input youtube video link here' required />
                         <button className='bg-indigo-500 absolute right-0 h-full px-5 text-white'>Click</button>
                     </div>
+                    {
+                        !link && <p className='text-white text-[11px] pt-2'>Example : https://youtu.be/MLNWR5evtCQ</p>
+                    }
                 </form>
             </div>
             <div>
