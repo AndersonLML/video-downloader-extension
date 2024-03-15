@@ -1,5 +1,4 @@
 
-const local_mode = 'local'
 const production_mode = 'production'
 
 const mode = production_mode
